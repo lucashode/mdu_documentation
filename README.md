@@ -50,3 +50,22 @@ To control the car in the map.
 cd carla/PythonAPI/util
 ./config.py -h
 ```
+
+## Scenic
+### Installation
+Scenic is a scenario generator that works with Carla. First install the scenic branch we did : 
+```bash
+git clone github.com/lucashode/Scenic
+```
+This folder contains all the changes I've done, especially for the drones.
+
+### Learning Scenic
+To learn scenic, I advise to :
+1. Read the Scenic documentation : https://scenic-lang.readthedocs.io/en/latest/
+2. Check the examples in the Scenic repositories
+
+To run a simulation in Carla you
+
+
+
+
