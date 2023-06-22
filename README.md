@@ -58,13 +58,80 @@ Scenic is a scenario generator that works with Carla. First install the scenic b
 git clone github.com/lucashode/Scenic
 ```
 This folder contains all the changes I've done, especially for the drones.
+You'll also need to install every python requirements, preferably in a virtual environment.
+```bash
+pip install scenic
+```
 
 ### Learning Scenic
-To learn scenic, I advise to :
+To learn scenic syntax, I advise to :
 1. Read the Scenic documentation : https://scenic-lang.readthedocs.io/en/latest/
-2. Check the examples in the Scenic repositories
+2. Read the following document : https://link.springer.com/article/10.1007/s10994-021-06120-5
+3. Check the examples in the Scenic repositories
 
-To run a simulation in Carla you
+To run a simulation in Carla you need to respect the following conditions :
+
+1. In the scenic script you want to use, you need to precise in the first lines :
+   ```bash
+   param carla_map = 'path/to/the/map.xodr'
+   param map = 'map.xodr'
+   scenic.simulators.carla.model
+   ```
+2. Then in the bash :
+   ```bash
+   scenic script.scenic --simulate
+   ```
+
+This should open a pygame window that runs the scenario you want. 
+
+You can add some parameters in the prompt to control better the simulation such as :
+* ```bash
+   scenic script.scenic --simulate --time 200
+   ```
+That will start a new simulation after 200 world ticks
+
+* ```bash
+   scenic script.scenic --simulate --count 5
+   ```
+That will stop generating new simulations after 5 successful simulations
+
+### Add custom assets to Carla
+
+In this part I'll suppose that the package that contains the assets you want is already cooked. If you want to learn about that, refers to the Carla documentation.
+
+To import assets or map, you'll just need to put the package in the Import folder of the Carla repository and run in the bash :
+```bash
+./ImportAssets.sh
+```
+This should create a new folder in the carla/CarlaUE4/Content/
+
+#### Maps 
+
+If the asset is a map, to check if it's well imported, open the Carla server then run the config.py in the bash :
+```bash
+cd carla/PythonAPI/util
+./config.py --list
+```
+
+This should print the available weather/maps. 
+Find your custom map then :  
+```bash
+./config.py --map Custom_map
+```
+This should open your map in the Carla window.
+
+You can then try to generate traffic to see if the map works well.
+
+* If you want to use it with scenic :
+1. Take the file from carla/CarlaUE4/Content/Custom_map/Maps/Custom_map/Opendrive/Custom_map.xodr to Scenic/tests/formats/maps/opendrive/maps/Carla/
+    
+2. Then in your scenic code :
+   ```bash
+   param carla_map = 'path/to/the/Custom_map.xodr'
+   param map = 'Custom_map.xodr'
+   scenic.simulators.carla.model
+   ```
+
 
 
 
