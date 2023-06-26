@@ -132,6 +132,51 @@ You can then try to generate traffic to see if the map works well.
    scenic.simulators.carla.model
    ```
 
+Then the simulation should start on the custom map.
+
+#### Props
+
+If the asset is a prop, to check if it's well imported, open the Carla server then in a python script, find your asset in the blueprint library like that:
+  ```bash
+    client = carla.Client('localhost', 2000)
+    client.set_timeout(2.0)
+    world = client.get_world()
+    print(world.get_blueprint_library())
+   ```
+Once you find it, you can use the spawn_actor method :
+
+  ```bash
+    spawn_point = world.get_map().get_spawn_points()[0]
+    custom_asset_bp = world.get_blueprint_library().filter('name_of_the_bp')
+    custom_asset=world.spawn_actor(custom_asset_bp,spawnpoint) 
+   ```
+If the prop is well imported, it should spawn on the Carla server.
+
+##### Else, you can try to check multiple things to fix the problem :
+1. Restart the Carla server. Indeed, especially if you import the assets while a Carla instance was already up, you should restart the server to apply changes.
+2. Check the json file of the asset. In carla/CarlaUE4/Content/YourPackage/Config you should find a json file that shows all the assets added with package. An example of an asset in the json file should look like this :
+   ```
+   {
+            "name": "asset01",
+            "path": "/Game/YourPackage/Static/Dynamic/asset_01/asset_01.asset_01",
+            "size": "tiny"
+        }
+   ```
+What you have to check is that the path really refers to an existing file. To do that, follow the path and try to find asset_01.uexp & asset_01.uasset. If those don't exist, then try to find one whose name is close (for example asset_01_diff). Therefore modify the json file:
+```
+   {
+            "name": "asset01",
+            "path": "/Game/YourPackage/Static/Dynamic/asset_01/asset_01_diff.asset_01_diff",
+            "size": "tiny"
+        }
+   ```
+Then restart the server and try to spawn actor again.
+This issue came from the naming of the different part of the assets in the fbx file so you should be really careful about the assets you use.
+
+3. If after this check it still doesn't work then it's probably the fault of the fbx file you tried to import so you should go back to blender and check about the asset.
+
+
+
 
 
 
