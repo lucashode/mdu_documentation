@@ -95,7 +95,7 @@ That will start a new simulation after 200 world ticks
    ```
 That will stop generating new simulations after 5 successful simulations
 
-### Add custom assets to Carla
+## Add custom assets to Carla
 
 In this part I'll suppose that the package that contains the assets you want is already cooked. If you want to learn about that, refers to the Carla documentation.
 
@@ -105,7 +105,7 @@ To import assets or map, you'll just need to put the package in the Import folde
 ```
 This should create a new folder in the carla/CarlaUE4/Content/
 
-#### Maps 
+### Maps 
 
 If the asset is a map, to check if it's well imported, open the Carla server then run the config.py in the bash :
 ```bash
@@ -134,7 +134,7 @@ You can then try to generate traffic to see if the map works well.
 
 Then the simulation should start on the custom map.
 
-#### Props
+### Props
 
 If the asset is a prop, to check if it's well imported, open the Carla server then in a python script, find your asset in the blueprint library like that:
   ```bash
@@ -175,9 +175,31 @@ This issue came from the naming of the different part of the assets in the fbx f
 
 3. If after this check it still doesn't work then it's probably the fault of the fbx file you tried to import so you should go back to blender and check about the asset.
 
+#### Add props assets in Scenic
 
+To use your custom assets with Scenic, follow those steps :
 
-
-
+1. Go to Scenic/src/scenic/simulators/carla/blueprints.scenic
+2. Find "## Prop blueprints"
+3. Add a new category of props like that :
+```
+   #: blueprints for custom assets
+customAssetModels = [
+      'static.prop.asset01',
+      'static.prop.asset02',
+      ...
+      'static.prop.assetxx'
+]
+```
+4. Then in the same repository open model.scenic
+5. Create a new class derivated from the prop class like that :
+```
+class CustomAssets(Prop):
+    blueprint: Uniform(*blueprints.customAssetModels)
+```
+6. Then you can spawn the custom asset by writing in a scenic script :
+```
+customaAsset = CustomAsset
+```
 
 
