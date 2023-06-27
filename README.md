@@ -237,7 +237,8 @@ drone = Drone with elevation 10
       * In actions.py : I created basic actions such as go forward, turn right, and turn left. 
       * In behaviors.scenic : I created a drone behavior that would make the drone go forward and turn left or right after a defined amount of time
       * Those actions/behaviors can be found in our Scenic branch.
-Once all those actions are defined, in a Scenic script write : 
+
+Once everything is defined, in a Scenic script write : 
 ```
 drone = Drone with elevation 10, with behavior DroneBehavior
 ```
