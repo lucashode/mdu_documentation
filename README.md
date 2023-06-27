@@ -53,7 +53,7 @@ cd carla/PythonAPI/util
 
 ## Scenic
 ### Installation
-Scenic is a scenario generator that works with Carla. First install the scenic branch we did : 
+Scenic is a scenario generator that works with Carla. We used the scenic 2 version because scenic 3 wasn't released officially. First install the scenic branch we did : 
 ```bash
 git clone github.com/lucashode/Scenic
 ```
@@ -202,4 +202,13 @@ class CustomAssets(Prop):
 customaAsset = CustomAsset
 ```
 
+## Drones assets
+
+In this section I will explain how we implemented drones in Carla and Scenic through the following steps :
+
+1. Spawn the drones in Carla with its Python API
+2. Control the drones with Python
+3. Spawn the drones with Scenic
+4. Control the Scenic created drones with Python
+5. Control the drones with Scenic  
 
