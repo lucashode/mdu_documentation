@@ -156,7 +156,7 @@ If the prop is well imported, it should spawn on the Carla server.
 1. Restart the Carla server. Indeed, especially if you import the assets while a Carla instance was already up, you should restart the server to apply changes.
 2. Check the json file of the asset. In carla/CarlaUE4/Content/YourPackage/Config you should find a json file that shows all the assets added with package. An example of an asset in the json file should look like this :
    ```
-   {
+        {
             "name": "asset01",
             "path": "/Game/YourPackage/Static/Dynamic/asset_01/asset_01.asset_01",
             "size": "tiny"
@@ -164,7 +164,7 @@ If the prop is well imported, it should spawn on the Carla server.
    ```
 What you have to check is that the path really refers to an existing file. To do that, follow the path and try to find asset_01.uexp & asset_01.uasset. If those don't exist, then try to find one whose name is close (for example asset_01_diff). Therefore modify the json file:
 ```
-   {
+        {
             "name": "asset01",
             "path": "/Game/YourPackage/Static/Dynamic/asset_01/asset_01_diff.asset_01_diff",
             "size": "tiny"
@@ -210,5 +210,39 @@ In this section I will explain how we implemented drones in Carla and Scenic thr
 2. Control the drones with Python
 3. Spawn the drones with Scenic
 4. Control the Scenic created drones with Python
-5. Control the drones with Scenic  
+5. Control the drones with Scenic
+   
+* The spawn of the drones was just an application of the previous section with drone models we found on internet.
+* To control them I wrote a python script that could make the drone move forward, turn right and do a looping. 
+* To spawn the drone with scenic we first followed the method previously presented. But then we faced the problem of elevation. Indeed, Scenic is a 2D scenario generator, so we needed to make adjustments to make it spawn things in the Carla 3D world.
+      * In Scenic/src/scenic/simulators/carla/simulator.py modify : 
+```
+loc = utils.scenicToCarlaLocation(obj.position, world=self.world, blueprint=obj.blueprint)
+```
+To
+```
+loc = utils.scenicToCarlaLocation(obj.position,obj.elevation, world=self.world, blueprint=obj.blueprint)
+```
+Those changes are already done on our Scenic branch.
+Then to spawn the drone you just need to write in a Scenic script :
+```
+drone = Drone with elevation 10
+```
+
+*	To control the Scenic drone with Carla’s Python API :
+      1.	Start the Scenic simulation that create a drone. 
+      2.	Start a Python Script that find the drone between all the actors on the server
+      3.	Make this actor move with the python script previously written
+*	To control the Scenic drone with Scenic only, I needed to create Actions and Behaviors for the drone. Go to Scenic/src/scenic/simulators/carla/
+      * In actions.py : I created basic actions such as go forward, turn right, and turn left. 
+      * In behaviors.scenic : I created a drone behavior that would make the drone go forward and turn left or right after a defined amount of time
+      * Those actions/behaviors can be found in our Scenic branch.
+Once all those actions are defined, in a Scenic script write : 
+```
+drone = Drone with elevation 10, with behavior DroneBehavior
+```
+This should spawn a moving drone 10 meters above the road
+
+
+
 
