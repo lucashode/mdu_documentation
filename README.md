@@ -233,6 +233,13 @@ drone = Drone with elevation 10
       1.	Start the Scenic simulation that create a drone. 
       2.	Start a Python Script that find the drone between all the actors on the server
       3.	Make this actor move with the python script previously written
+
+The script "drone_with_scenic" does that.  
+The result is the following : 
+<p align="center">
+  <img src="images/drone_scenic_python.gif?raw=true" alt="Bounding boxes" style="width:600px;"/>
+</p>
+
 *	To control the Scenic drone with Scenic only, I needed to create Actions and Behaviors for the drone. Go to Scenic/src/scenic/simulators/carla/
       * In actions.py : I created basic actions such as go forward, turn right, and turn left. 
       * In behaviors.scenic : I created a drone behavior that would make the drone go forward and turn left or right after a defined amount of time
@@ -244,16 +251,25 @@ drone = Drone with elevation 10, with behavior DroneBehavior
 ```
 This should spawn a moving drone 10 meters above the road
 
-## Bounding Boxes
+## Bounding Boxes and Labelling
 
 One of the objectives of this project was to generate datasets to train machine learning models. To do so, we need labelled images, with the position of every important objects on the image. 
 
 The advantage of carla is that it can generate the images and the labels automatically.  
 To do that I followed this tutorial on the Carla documentation : https://carla.readthedocs.io/en/latest/tuto_G_bounding_boxes/
 
-The script "bounding_boxes.py" is a basic application of this tutorial. It draws bounding boxes around cars, traffic signs, traffic_lights in two variations, white if the car can't know its color, magenta else.
+### In Carla
 
+The script "bounding_boxes.py" is a basic application of this tutorial.
+1. It first create a car and place a camera on it and make it drive.
+2. It creates 50 other cars and make them all drive.
+3. Every sensor_ticks, the script gets a new image from the camera
+4. Finally it draws bounding boxes around cars(blue), traffic signs(yellow), traffic_lights in two variations, white if the car can't know its color, magenta else.  
 The result is the following : 
 <p align="center">
-  <img src="images/bounding_boxes.gif?raw=true" alt="Bounding boxes"/>
+  <img src="images/bounding_boxes.gif?raw=true" alt="Bounding boxes" style="width:600px;"/>
 </p>
+
+The "generate_xml.py" does the same but exports the images and the bounding boxes in Pascal VOC Format. With that, it is possible to drain datasets.
+
+
