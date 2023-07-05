@@ -244,6 +244,16 @@ drone = Drone with elevation 10, with behavior DroneBehavior
 ```
 This should spawn a moving drone 10 meters above the road
 
+## Bounding Boxes
 
+One of the objectives of this project was to generate datasets to train machine learning models. To do so, we need labelled images, with the position of every important objects on the image. 
 
+The advantage of carla is that it can generate the images and the labels automatically.  
+To do that I followed this tutorial on the Carla documentation : https://carla.readthedocs.io/en/latest/tuto_G_bounding_boxes/
 
+The script "bounding_boxes.py" is a basic application of this tutorial. It draws bounding boxes around cars, traffic signs, traffic_lights in two variations, white if the car can't know its color, magenta else.
+
+The result is the following : 
+<p align="center">
+  <img src="images/bounding_boxes.gif?raw=true" alt="Bounding boxes"/>
+</p>
