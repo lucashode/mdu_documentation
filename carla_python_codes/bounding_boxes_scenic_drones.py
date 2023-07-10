@@ -10,7 +10,7 @@ def connect(world,camera_bp,image_queue,timeout = 5):
     t = time.time()
     while time.time()-t < timeout:
         try:
-            id = world.get_actors().filter('*vehicle*')[0].id
+            id = world.get_actors().filter('*debris*')[0].id
             vehicle = world.get_actor(id)
             camera_init_trans = carla.Transform(carla.Location(x=2,z=2))
             camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=vehicle)
@@ -18,19 +18,14 @@ def connect(world,camera_bp,image_queue,timeout = 5):
             # Get the world to camera matrix
             world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
             # Get the attributes from the camera
-            image_w = camera_bp.get_attribute("image_size_x").as_int()
-            image_h = camera_bp.get_attribute("image_size_y").as_int()
-            fov = camera_bp.get_attribute("fov").as_float()
-            # Calculate the camera projection matrix to project from 3D -> 2D
-            K = build_projection_matrix(image_w, image_h, fov)
             # Remember the edge pairs
-            edges = [[0,1], [1,3], [3,2], [2,0], [0,4], [4,5], [5,1], [5,7], [7,6], [6,4], [6,2], [7,3]]
+            
             drone_civilian_ids = []
             if (world.get_actors().filter('*drone_civilian*'))!=[]:
                 for drone in world.get_actors().filter('*drone_civilian*'):
                     drone_civilian_ids.append(drone.id)
 
-            return id,vehicle,camera,world_2_camera,edges,K,drone_civilian_ids
+            return id,vehicle,camera,world_2_camera,drone_civilian_ids
             
         except:
             pass
@@ -70,7 +65,7 @@ client = carla.Client('localhost', 2000)
 world  = client.get_world()
 bp_lib = world.get_blueprint_library()
 
-
+map = world.get_map().name[-6:]
 
 #defining a timeout to scenic connection
 scenic_timeout = 30
@@ -81,7 +76,13 @@ camera_bp = bp_lib.find('sensor.camera.rgb')
 camera_bp.set_attribute("image_size_x",str(640))
 camera_bp.set_attribute("image_size_y",str(380))
 camera_bp.set_attribute("fov",str(90))
-camera_bp.set_attribute("sensor_tick",str(0.2))
+camera_bp.set_attribute("sensor_tick",str(0.1))
+
+image_w = camera_bp.get_attribute("image_size_x").as_int()
+image_h = camera_bp.get_attribute("image_size_y").as_int()
+fov = camera_bp.get_attribute("fov").as_float()
+# Calculate the camera projection matrix to project from 3D -> 2D
+K = build_projection_matrix(image_w, image_h, fov)
 
 
 # Set up the simulator in synchronous mode
@@ -93,82 +94,27 @@ world.apply_settings(settings)
 # Create a queue to store and retrieve the sensor data
 image_queue = queue.Queue()
 
-color = random.randint(0,2)
-list_actor = world.get_actors()
-for actor_ in list_actor:
-    if isinstance(actor_, carla.TrafficLight):
-            # for any light, first set the light state, then set time. for yellow it is 
-            # carla.TrafficLightState.Yellow and Red it is carla.TrafficLightState.Red
-        
-        if color == 0:
-            actor_.set_state(carla.TrafficLightState.Green) 
-        
-        elif color ==1:
-            actor_.set_state(carla.TrafficLightState.Yellow) 
-        else:
-            actor_.set_state(carla.TrafficLightState.Red) 
-        actor_.freeze(True)   
 
-traffic_light_color = ["green","orange","red"]
-
-# for i in range(50):
-#     vehicle_bp = random.choice(bp_lib.filter('vehicle'))
-#     npc = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
-#     if npc:
-#         npc.set_autopilot(True)
-
-# Get informations from scenic simulation
-
-bounding_box_set_traffic_lights = world.get_level_bbs(carla.CityObjectLabel.TrafficLight)
-bounding_box_set_traffic_signs=world.get_level_bbs(carla.CityObjectLabel.TrafficSigns)
-
-
-
-bike_ids = []
-motorbike_ids = []
-
-if (world.get_actors().filter('*bike*').filter('*vehicle*'))!=[]:
-    for bike in world.get_actors().filter('*bike*').filter('*vehicle*'):
-        bike_ids.append(bike.id)
-
-
-
-motorbike_list = [world.get_actors().filter('*yamaha*').filter('*vehicle*') , world.get_actors().filter('*vespa*').filter('*vehicle*') , world.get_actors().filter('*kawasaki*').filter('*vehicle*') , world.get_actors().filter('*harley*').filter('*vehicle*')]
-
-if (motorbike_list)!=[]:
-    for motorbikes in motorbike_list:
-        for motorbike in motorbikes:
-            motorbike_ids.append(motorbike.id)
-
-visible_traffic_light = carla.Location(0,0,0)
-
-id,vehicle,camera,world_2_camera,edges,K,drone_civilian_ids = connect(world,camera_bp,image_queue,scenic_timeout)
+id,vehicle,camera,world_2_camera,drone_civilian_ids = connect(world,camera_bp,image_queue,scenic_timeout)
 
 
 while True:
     
+    
+
     # Process calculations only if a new image is available (enhance the simulator performance)
-    if image_queue.empty():
-        continue
+    while image_queue.empty():
+        time.sleep(0.2)
         
     # Retrieve and reshape the image
     #camera.destroy()
     
-    
     try:
-
-        ego=world.get_actors().filter('*vehicle*')[0]
-        if ego.id != id:
-            camera.destroy()
-            id,vehicle,camera,world_2_camera,edges,K,drone_civilian_ids = connect(world,camera_bp,image_queue,scenic_timeout)
-            
+        world.get_actors().filter('*debris*')[0].id
     except:
         camera.destroy()
-        id,vehicle,camera,world_2_camera,edges,K,drone_civilian_ids = connect(world,camera_bp,image_queue,scenic_timeout)
+        id,vehicle,camera,world_2_camera,drone_civilian_ids = connect(world,camera_bp,image_queue,scenic_timeout)
         
-
-
-    world.tick()
 
     image = image_queue.get()
 
@@ -176,189 +122,7 @@ while True:
 
     # Get the camera matrix 
     world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
-
-
-
-    for traffic_light in list_actor:
-        if isinstance(traffic_light, carla.TrafficLight):
-            
-            dist = traffic_light.get_transform().location.distance(vehicle.get_transform().location)
-            # Filter for distance from ego vehicle
-            if dist < 50:
-                # Calculate the dot product between the forward vector
-                # of the vehicle and the vector between the vehicle
-                # and the bounding box. We threshold this dot product
-                # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
-                forward_vec = vehicle.get_transform().get_forward_vector()
-                ray = traffic_light.get_transform().location - vehicle.get_transform().location
-
-                if forward_vec.dot(ray) > 1:
-                    # Cycle through the vertices
-                    transform = traffic_light.get_transform()
-                    traffic_vect = transform.get_right_vector()
-                    
-                        
-                    if forward_vec.dot(traffic_vect) <-0.95:
-                        visible_traffic_light = carla.Location(x=traffic_light.get_transform().location.x,y=traffic_light.get_transform().location.y,z=2.6)
-
-                            
-                            
-
-    for bb in bounding_box_set_traffic_lights:
-
-        # Filter for distance from ego vehicle
-        if bb.location.distance(vehicle.get_transform().location) < 50:
-
-            # Calculate the dot product between the forward vector
-            # of the vehicle and the vector between the vehicle
-            # and the bounding box. We threshold this dot product
-            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
-            forward_vec = vehicle.get_transform().get_forward_vector()
-            ray = bb.location - vehicle.get_transform().location
-
-            if forward_vec.dot(ray) > 1:
-                # print(world.cast_ray(bb.location,vehicle.get_transform().location))
-                # Cycle through the vertices
-            
-                verts = [v for v in bb.get_world_vertices(carla.Transform())]
-                
-                for edge in edges:
-                    # Join the vertices into edges
-                    p1 = get_image_point(bb.location, K, world_2_camera)
-                    
-                    x_max = -10000
-                    x_min = 10000
-                    y_max = -10000
-                    y_min = 10000
-
-                    for vert in verts:
-                        p = get_image_point(vert, K, world_2_camera)
-                        
-                        # Find the rightmost vertex
-                        if p[0] > x_max:
-                            x_max = p[0]
-                        # Find the leftmost vertex
-                        if p[0] < x_min:
-                            x_min = p[0]
-                        # Find the highest vertex
-                        if p[1] > y_max:
-                            y_max = p[1]
-                        # Find the lowest  vertex
-                        if p[1] < y_min:
-                            y_min = p[1]
-                    
-                    
-
-                    if bb.location.distance(visible_traffic_light)<1:
-                        cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (255,0,255, 255), 1)
-                        cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (255,0,255, 255), 1)
-                        cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (255,0,255, 255), 1)
-                        cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (255,0,255, 255), 1)
-                    else:
-                        cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (255,255,255, 255), 1)
-                        cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (255,255,255, 255), 1)
-                        cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (255,255,255, 255), 1)
-                        cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (255,255,255, 255), 1)
-                    
-
-
-    for bb in bounding_box_set_traffic_signs:
-
-        # Filter for distance from ego vehicle
-        if bb.location.distance(vehicle.get_transform().location) < 50:
-
-            # Calculate the dot product between the forward vector
-            # of the vehicle and the vector between the vehicle
-            # and the bounding box. We threshold this dot product
-            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
-            forward_vec = vehicle.get_transform().get_forward_vector()
-            ray = bb.location - vehicle.get_transform().location
-
-            if forward_vec.dot(ray) > 1:
-                # Cycle through the vertices
-                verts = [v for v in bb.get_world_vertices(carla.Transform())]
-                for edge in edges:
-                    # Join the vertices into edges
-                    p1 = get_image_point(bb.location, K, world_2_camera)
-                    
-                    x_max = -10000
-                    x_min = 10000
-                    y_max = -10000
-                    y_min = 10000
-
-                    for vert in verts:
-                        p = get_image_point(vert, K, world_2_camera)
-                        # Find the rightmost vertex
-                        if p[0] > x_max:
-                            x_max = p[0]
-                        # Find the leftmost vertex
-                        if p[0] < x_min:
-                            x_min = p[0]
-                        # Find the highest vertex
-                        if p[1] > y_max:
-                            y_max = p[1]
-                        # Find the lowest  vertex
-                        if p[1] < y_min:
-                            y_min = p[1]
-
-                    
-
-                    cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,255,255, 255), 1)
-                    cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,255,255, 255), 1)
-                    cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,255,255, 255), 1)
-                    cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,255,255, 255), 1)
-                    
-
-
-    for npc in world.get_actors().filter('*vehicle*'):
-
-        # Filter out the ego vehicle
-        if npc.id != vehicle.id:
-
-            bb = npc.bounding_box
-            dist = npc.get_transform().location.distance(vehicle.get_transform().location)
-
-            # Filter for the vehicles within 50m
-            if dist < 50:
-
-            # Calculate the dot product between the forward vector
-            # of the vehicle and the vector between the vehicle
-            # and the other vehicle. We threshold this dot product
-            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
-                forward_vec = vehicle.get_transform().get_forward_vector()
-                ray = npc.get_transform().location - vehicle.get_transform().location
-
-                if forward_vec.dot(ray) > 1:
-                    p1 = get_image_point(bb.location, K, world_2_camera)
-                    verts = [v for v in bb.get_world_vertices(npc.get_transform())]
-                    x_max = -10000
-                    x_min = 10000
-                    y_max = -10000
-                    y_min = 10000
-
-                    for vert in verts:
-                        p = get_image_point(vert, K, world_2_camera)
-                        # Find the rightmost vertex
-                        if p[0] > x_max:
-                            x_max = p[0]
-                        # Find the leftmost vertex
-                        if p[0] < x_min:
-                            x_min = p[0]
-                        # Find the highest vertex
-                        if p[1] > y_max:
-                            y_max = p[1]
-                        # Find the lowest  vertex
-                        if p[1] < y_min:
-                            y_min = p[1]
-                        
-                    
-                    
-                    if npc.id not in bike_ids and npc.id not in motorbike_ids:     
-                        cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,0, 255), 1)
-                        cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,0, 255), 1)
-                        cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,0, 255), 1)
-                        cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,0, 255), 1)  
-
+                   
     for npc in world.get_actors().filter('*drone*'):
 
         # Filter out the ego vehicle
@@ -369,7 +133,7 @@ while True:
             dist = npc.get_transform().location.distance(vehicle.get_transform().location)
 
             # Filter for the vehicles within 50m
-            if dist < 150:
+            if dist < 100:
 
             # Calculate the dot product between the forward vector
             # of the vehicle and the vector between the vehicle
@@ -414,6 +178,54 @@ while True:
                         cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (255,0,122, 255), 1)
                         cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (255,0,122, 255), 1)
                         cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (255,0,122, 255), 1)
+
+    for npc in world.get_actors().filter('*eagle_*'):
+
+        # Filter out the ego vehicle
+        
+        if npc.id != vehicle.id:
+
+            bb = npc.bounding_box
+            dist = npc.get_transform().location.distance(vehicle.get_transform().location)
+
+            # Filter for the vehicles within 50m
+            if dist < 100:
+
+            # Calculate the dot product between the forward vector
+            # of the vehicle and the vector between the vehicle
+            # and the other vehicle. We threshold this dot product
+            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
+                forward_vec = vehicle.get_transform().get_forward_vector()
+                ray = npc.get_transform().location - vehicle.get_transform().location
+
+                if forward_vec.dot(ray) > 1:
+                    p1 = get_image_point(bb.location, K, world_2_camera)
+                    verts = [v for v in bb.get_world_vertices(npc.get_transform())]
+                    x_max = -10000
+                    x_min = 10000
+                    y_max = -10000
+                    y_min = 10000
+
+                    for vert in verts:
+                        p = get_image_point(vert, K, world_2_camera)
+                        # Find the rightmost vertex
+                        if p[0] > x_max:
+                            x_max = p[0]
+                        # Find the leftmost vertex
+                        if p[0] < x_min:
+                            x_min = p[0]
+                        # Find the highest vertex
+                        if p[1] > y_max:
+                            y_max = p[1]
+                        # Find the lowest  vertex
+                        if p[1] < y_min:
+                            y_min = p[1]
+                        
+                     
+                    cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (255,255,0, 255), 1)
+                    cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (255,255,0, 255), 1)
+                    cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (255,255,0, 255), 1)
+                    cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (255,255,0, 255), 1)   
 
 
     cv2.imshow('ImageWindowName',img)
