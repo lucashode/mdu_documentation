@@ -251,6 +251,43 @@ drone = Drone with elevation 10, with behavior DroneBehavior
 ```
 This should spawn a moving drone 10 meters above the road
 
+### Military & Civilian Drones
+
+One of the project we had was to create a dataset with different type of Drones, with the most important categories : Military and Civilian Drones.  
+To implement them I just created 2 new classes of blueprints that would contain the civilian/militarian drone models.  
+```
+#: blueprints for drones
+civiliandroneModels = [
+      'static.prop.drone_civilian_parrot',
+      'static.prop.drone_civilian_minimalistic',
+      'static.prop.drone_civilian_generic',
+      'static.prop.drone_civilian_phantom',
+]
+
+#: blueprints for drones
+militarydroneModels = [
+      'static.prop.drone_f35',
+      'static.prop.drone_military_bayraktar',
+      'static.prop.drone_fictitious_cyberpolicevtol',
+      'static.prop.drone_military_reaper'
+]
+```
+I also added 2 new models classes that derivate from the Drone class : 
+```
+class Drone(Prop):
+    regionContainedIn: road
+    position: Point on road
+    heading: Range(0, 360) deg
+    width: 0.5
+    length: 0.5
+    physics: False
+
+class CivilianDrone(Drone):
+    blueprint: Uniform(*blueprints.civiliandroneModels)
+
+class MilitaryDrone(Drone):
+    blueprint: Uniform(*blueprints.militarydroneModels)
+```
 ## Bounding Boxes and Labelling
 
 One of the objectives of this project was to generate datasets to train machine learning models. To do so, we need labelled images, with the position of every important objects on the image. 
@@ -258,7 +295,7 @@ One of the objectives of this project was to generate datasets to train machine 
 The advantage of carla is that it can generate the images and the labels automatically.  
 To do that I followed this tutorial on the Carla documentation : https://carla.readthedocs.io/en/latest/tuto_G_bounding_boxes/
 
-### In Carla
+### With Python API
 
 The script "bounding_boxes.py" is a basic application of this tutorial.
 1. It first create a car and place a camera on it and make it drive.
@@ -270,6 +307,13 @@ The result is the following :
   <img src="images/bounding_boxes.gif?raw=true" alt="Bounding boxes" style="width:600px;"/>
 </p>
 
-The "generate_xml.py" does the same but exports the images and the bounding boxes in Pascal VOC Format. With that, it is possible to drain datasets.
+The "generate_xml.py" does the same but exports the images and the bounding boxes in Pascal VOC Format. With that, it is possible to create datasets.
+
+### Adding Scenic
+
+To make it usable with Drones, the objective was to be able to start a scenario with Scenic and use Python to connect to the simulation.
+The script "bounding_boxes_scenic_drones" is what I've done to answer this issue.
+
+
 
 
