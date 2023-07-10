@@ -288,6 +288,11 @@ class CivilianDrone(Drone):
 class MilitaryDrone(Drone):
     blueprint: Uniform(*blueprints.militarydroneModels)
 ```
+
+This way we can spawn Military/Civilian Drones and gave them the DroneBehavior.
+
+By the way this is expendable for new kinds of flying objects like birds for examples.
+
 ## Bounding Boxes and Labelling
 
 One of the objectives of this project was to generate datasets to train machine learning models. To do so, we need labelled images, with the position of every important objects on the image. 
@@ -311,8 +316,9 @@ The "generate_xml.py" does the same but exports the images and the bounding boxe
 
 ### Adding Scenic
 
-To make it usable with Drones, the objective was to be able to start a scenario with Scenic and use Python to connect to the simulation.
-The script "bounding_boxes_scenic_drones" is what I've done to answer this issue.
+To make it usable with Drones, the objective was to be able to start a scenario with Scenic and use Python to connect to the simulation.  
+The script "bounding_boxes_scenic_drones" is what I've done to answer this issue. What he does is quite simple : 
+1. 
 
 
 
