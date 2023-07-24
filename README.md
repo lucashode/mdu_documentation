@@ -317,8 +317,15 @@ The "generate_xml.py" does the same but exports the images and the bounding boxe
 ### Adding Scenic
 
 To make it usable with Drones, the objective was to be able to start a scenario with Scenic and use Python to connect to the simulation.  
-The script "bounding_boxes_scenic_drones" is what I've done to answer this issue. What he does is quite simple : 
-1. 
+The script "bounding_boxes_scenic_drones" is what I've done to answer this issue. It has to work with "drone.scenic".
+What he does is quite simple : 
+1. Connect to the Carla world
+2. Setup the cameras
+3. Find the ego thing (which is a debris)
+4. Stick a camera to it
+5. Get images and draw the bounding boxes around objects until the camera is destroyed (because the scenic simulation is finished)
+6. Try to find the ego thing again
+   
 
 
 
