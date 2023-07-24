@@ -55,7 +55,7 @@ cd carla/PythonAPI/util
 ### Installation
 Scenic is a scenario generator that works with Carla. We used the scenic 2 version because scenic 3 wasn't released officially. First install the scenic branch we did : 
 ```bash
-git clone github.com/lucashode/Scenic
+git clone https://github.com/lucashode/Scenic
 ```
 This folder contains all the changes I've done, especially for the drones.
 You'll also need to install every python requirements, preferably in a virtual environment.
@@ -226,7 +226,7 @@ loc = utils.scenicToCarlaLocation(obj.position,obj.elevation, world=self.world, 
 Those changes are already done on our Scenic branch.
 Then to spawn the drone you just need to write in a Scenic script :
 ```
-drone = Drone with elevation 10
+drone = FlyingObject with elevation 10
 ```
 
 *	To control the Scenic drone with Carla’s Python API :
@@ -242,19 +242,19 @@ The result is the following :
 
 *	To control the Scenic drone with Scenic only, I needed to create Actions and Behaviors for the drone. Go to Scenic/src/scenic/simulators/carla/
       * In actions.py : I created basic actions such as go forward, turn right, and turn left. 
-      * In behaviors.scenic : I created a drone behavior that would make the drone go forward and turn left or right after a defined amount of time
-      * Those actions/behaviors can be found in our Scenic branch.
+      * In behaviors.scenic : I created a flying behavior for every flying objects that would make the drone go forward and turn left or right after a defined amount of time
+      * Those actions/behaviors can be found in my Scenic branch.
 
 Once everything is defined, in a Scenic script write : 
 ```
-drone = Drone with elevation 10, with behavior DroneBehavior
+drone = FlyingObject with elevation 10, with behavior FlyingBehavior
 ```
 This should spawn a moving drone 10 meters above the road
 
-### Military & Civilian Drones
+### Military & Civilian Drones & Birds
 
-One of the project we had was to create a dataset with different type of Drones, with the most important categories : Military and Civilian Drones.  
-To implement them I just created 2 new classes of blueprints that would contain the civilian/militarian drone models.  
+One of the project we had was to create a dataset with different type of Drones, with the most important categories : Military and Civilian Drones. We also wanted to add birds.
+To implement them I just created 3 new classes of blueprints that would contain the civilian/militarian drone models as well as the birds models.  
 ```
 #: blueprints for drones
 civiliandroneModels = [
@@ -271,10 +271,29 @@ militarydroneModels = [
       'static.prop.drone_fictitious_cyberpolicevtol',
       'static.prop.drone_military_reaper'
 ]
+
+#: blueprints for birds
+birdModels = [
+      'static.prop.eagle_01',
+      'static.prop.eagle_02',
+      'static.prop.eagle_03',
+      'static.prop.eagle_04',
+      'static.prop.eagle_05',
+      'static.prop.eagle_06',
+      'static.prop.eagle_07',
+      'static.prop.blackeagle_01',
+      'static.prop.blackeagle_02',
+      'static.prop.blackeagle_03',
+      'static.prop.blackeagle_04',
+      'static.prop.blackeagle_05',
+      'static.prop.blackeagle_06',
+      'static.prop.blackeagle_07'
+
+]
 ```
-I also added 2 new models classes that derivate from the Drone class : 
+I also added 3 new models classes that derivate from the FlyingObject class : 
 ```
-class Drone(Prop):
+class FlyingObject(Prop):
     regionContainedIn: road
     position: Point on road
     heading: Range(0, 360) deg
@@ -282,27 +301,28 @@ class Drone(Prop):
     length: 0.5
     physics: False
 
-class CivilianDrone(Drone):
+class CivilianDrone(FlyingObject):
     blueprint: Uniform(*blueprints.civiliandroneModels)
 
-class MilitaryDrone(Drone):
+class MilitaryDrone(FlyingObject):
     blueprint: Uniform(*blueprints.militarydroneModels)
+
+class Birds(FlyingObject):
+    blueprint: Uniform(*blueprints.birdModels)
 ```
 
-This way we can spawn Military/Civilian Drones and gave them the DroneBehavior.
-
-By the way this is expendable for new kinds of flying objects like birds for examples.
+This way we can spawn Military/Civilian Drones and birds and gave them the FlyingBehavior.
 
 ## Bounding Boxes and Labelling
 
-One of the objectives of this project was to generate datasets to train machine learning models. To do so, we need labelled images, with the position of every important objects on the image. 
+One of the objectives of this project was to generate datasets to train machine learning models. To do so, we need labelled images, with the position of every objects of interest on the image. 
 
-The advantage of carla is that it can generate the images and the labels automatically.  
+The advantage of Carla is that it can generate the images and the labels at the same time automatically.  
 To do that I followed this tutorial on the Carla documentation : https://carla.readthedocs.io/en/latest/tuto_G_bounding_boxes/
 
 ### With Python API
 
-The script "bounding_boxes.py" is a basic application of this tutorial.
+The script "bounding_boxes.py" is a basic application of the previous tutorial.
 1. It first create a car and place a camera on it and make it drive.
 2. It creates 50 other cars and make them all drive.
 3. Every sensor_ticks, the script gets a new image from the camera
@@ -327,6 +347,16 @@ What he does is quite simple :
 6. Try to find the ego thing again
 
 The "bounding_boxes_scenic_drones_extended" does the same but adds a segmentic & a depth camera.
+
+## Machine Learning Training
+
+Now that we have our datasets, the training of machine learning models can start. However, we wanted to learn a little bit more about model training and image recognition.
+
+To do so, we decided to learn this by training a model on a swedish traffic sign dataset, and focusing only on speed limits panels.
+
+### YOLOv7
+
+To train this model, we decided to use yolov7, one of the currently best real-time object detection model. 
 
 
 
