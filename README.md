@@ -358,6 +358,12 @@ To do so, we decided to learn this by training a model on a swedish traffic sign
 
 To train this model, we decided to use yolov7, one of the currently best real-time object detection model. 
 
+For yolov7, i used a venv with python 3.7.16
+to begin you just need to
+```
+pip install -r requirements.txt
+pip install carla
+```
 
 
 
