@@ -60,7 +60,7 @@ git clone https://github.com/lucashode/Scenic
 This folder contains all the changes I've done, especially for the drones.
 You'll also need to install every python requirements, preferably in a virtual environment.
 ```bash
-pip install scenic
+pip install -e .
 ```
 
 ### Learning Scenic
